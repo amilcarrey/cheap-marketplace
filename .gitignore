@@ -1,0 +1,5 @@
+# gitignore for typescript project
+
+node_modules
+dist 
+

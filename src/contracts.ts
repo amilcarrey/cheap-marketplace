@@ -3,6 +3,9 @@ export enum ContractType {
    ERC721 = 'ERC721',
    MARKETPLACE = 'MARKETPLACE',
 }
+
+
+
 export const contracts = {
    [ContractType.ERC20]: {
       address: '0xbd65c58D6F46d5c682Bf2f36306D461e3561C747',

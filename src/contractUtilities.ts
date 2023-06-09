@@ -1,4 +1,4 @@
-import { Contract, providers } from 'ethers'
+import { Contract, Signer, Wallet, providers } from 'ethers'
 import { ContractType, contracts } from './contracts'
 
 const provider = new providers.JsonRpcProvider('https://rpc.sepolia.org/', 11155111);
@@ -10,4 +10,10 @@ const getContractInstance = (contractType: ContractType) => {
    return new Contract(contractData.address, contractData.abi, provider)
 }
 
-export { getContractInstance }
+const getContractInstanceWithSigner = (contractType: ContractType) => {
+   const contractData = contracts[contractType]
+   const signer = new Wallet(process.env.PRIVATE_KEY as string, provider)
+   return new Contract(contractData.address, contractData.abi, signer)
+}
+
+export { getContractInstance, getContractInstanceWithSigner }

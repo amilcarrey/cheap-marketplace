@@ -16,7 +16,7 @@ const haveEnoughBalance = async (address: string, amount: number) => {
 }
 
 const ownNft = async (address: string, tokenId: number) => {
-   const erc721Contract = getContractInstance(ContractType.ERC721, provider);
+   const erc721Contract = getContractInstance(ContractType.ERC721);
    const owner = await erc721Contract.ownerOf(tokenId);
    return owner === address;
 }

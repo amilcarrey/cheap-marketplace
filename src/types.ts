@@ -16,8 +16,8 @@ const bidSchema = z.union([purchaseSchema, z.object({
 type Offer = z.infer<typeof bidSchema>;
 
 enum ListingType {
-   Bid,
-   FixedPrice
+   Bid = 'Bid',
+   FixedPrice = 'FixedPrice'
 }
 
 const listingSchema = z.object({

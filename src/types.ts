@@ -1,19 +1,16 @@
 import { z } from "zod";
 
-const purchaseSchema = z.object({
+const offerSchema = z.object({
+   id: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
    buyerAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
    collectionAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-   tokenId: z.string().min(1),
+   erc20Address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+   tokenId: z.number().min(1),
+   bid: z.number().min(0),
+   buyerSignature: z.string(),
 });
 
-type Purchase = z.infer<typeof purchaseSchema>;
-
-
-const bidSchema = z.union([purchaseSchema, z.object({
-   bid: z.number().min(0),
-})]);
-
-type Offer = z.infer<typeof bidSchema>;
+type Offer = z.infer<typeof offerSchema>;
 
 enum ListingType {
    Bid = 'Bid',
@@ -31,4 +28,4 @@ const listingSchema = z.object({
 
 type Listing = z.infer<typeof listingSchema>;
 
-export { Offer, Listing, listingSchema, ListingType };
+export { Offer, Listing, listingSchema, offerSchema, ListingType };

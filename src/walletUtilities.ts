@@ -1,4 +1,4 @@
-import { providers } from 'ethers';
+import { BigNumber, providers, utils } from 'ethers';
 import { getContractInstance } from './contractUtilities';
 import { ContractType } from './contracts';
 
@@ -10,9 +10,10 @@ const getBalance = async (address: string) => {
    return balance;
 }
 
-const haveEnoughBalance = async (address: string, amount: number) => {
+const haveEnoughBalance = async (address: string, amount: string) => {
    const balance = await getBalance(address);
-   return balance.toNumber() >= amount;
+   const amountInWei = utils.parseEther(amount);
+   return balance.gte(amountInWei);
 }
 
 const ownNft = async (address: string, tokenId: number) => {

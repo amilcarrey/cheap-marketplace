@@ -1,7 +1,10 @@
 import express from 'express';
-import { Listing, ListingType, Offer, listingSchema, offerSchema } from './types';
+import { AcceptOfferInput, Listing, ListingType, Offer, acceptOfferInputSchema, listingSchema, offerSchema } from './types';
 import { haveEnoughBalance, ownNft } from './walletUtilities';
 import { v4 as uuidv4 } from 'uuid';
+import { getContractInstance, getContractInstanceWithSigner } from './contractUtilities';
+import { ContractType } from './contracts';
+import { BigNumber, utils } from 'ethers';
 
 const app = express();
 app.use(express.json());
@@ -48,6 +51,14 @@ app.get(['/listings', '/listings/:address'], (req, res) => {
 }
 );
 
+app.get('/offers', (req, res) => {
+   try {
+      return res.status(200).send(offers);
+   } catch (error) {
+      return res.status(500).send(error);
+   }
+})
+
 app.post('/sell', async (req, res) => {
    try {
       const listing = req.body as Listing;
@@ -79,11 +90,11 @@ app.post('/sell', async (req, res) => {
 
 // Maybe this endpoint should have a different name, like 'buy' or 'purchase', because 
 //but even if the listing is a fixed price, the seller still needs to accept the offer signing the offer. So, just to simplify things, I'll keep the name 'place-bid' and I'll be using for both cases 'purchase' and 'bid'.
-app.post('place-bid', async (req, res) => {
+app.post('/bid', async (req, res) => {
    try {
-      const offer = req.body as Offer
+      const offer = req.body as Omit<Offer, 'id'>;
 
-      const isOfferSchemaValid = offerSchema.safeParse(offer)
+      const isOfferSchemaValid = offerSchema.omit({ id: true }).safeParse(offer)
 
       if (!isOfferSchemaValid.success) {
          return res.status(400).send('Invalid offer input')
@@ -95,14 +106,16 @@ app.post('place-bid', async (req, res) => {
          return res.status(404).send('This item is not for sale')
       }
 
-      const _haveEnoughBalance = await haveEnoughBalance(offer.buyerAddress, offer.bid)
+      const _haveEnoughBalance = await haveEnoughBalance(offer.buyerAddress, offer.bid.toString())
 
       if (!_haveEnoughBalance) {
          return res.status(400).send('You don\'t have enough founds!')
       }
 
       if (listing.listingType === ListingType.FixedPrice) {
-         const isOfferEnough = offer.bid >= listing.bidStartAtOrSellPrice
+         const bidOffer = utils.parseEther(offer.bid.toString())
+         const sellPrice = utils.parseEther(listing.bidStartAtOrSellPrice.toString())
+         const isOfferEnough = bidOffer.gte(sellPrice)
          const isOfferValid = isOfferEnough && offer.erc20Address === listing.erc20Address
 
          if (!isOfferValid) {
@@ -110,25 +123,56 @@ app.post('place-bid', async (req, res) => {
          }
       }
 
-      offers.push(offer)
-   } catch (error) {
+      offers.push({ id: uuidv4(), ...offer })
+   } catch (error: any) {
       res.status(500).send(error.message)
    }
-}
-);
-
+});
+//1000000000000000000
 app.post('/accept-offer', async (req, res) => {
    try {
       // Obtain the offer from the request body
-      // Check again if the offer is still valid. If not, return an error and delete the listing. 
+      const body = req.body as AcceptOfferInput
+      const validResult = acceptOfferInputSchema.safeParse(body)
+      if (!validResult.success) {
+         return res.status(400).send('Invalid input')
+      }
+
+      // Check if the offer exists. If not, return an error.
+      const offer = offers.find(o => o.id === body.offerId)
+      if (!offer) {
+         return res.status(404).send('Offer not found')
+      }
+
+      // Check if the listing exists. If not, return an error.
+      const listing = listings.find(l => l.collectionAddress === offer.collectionAddress && l.tokenId === offer.tokenId)
+      if (!listing) {
+         return res.status(404).send('Listing not found')
+      }
+
+      // Check if the sellet is still the owner of the NFT. If not, return an error.
+
+      // Check if the offer is still valid. If not, return an error and delete the listing. 
+
       // Check if the seller and the buyer have allowed the contract to transfer the NFT and the ERC20 tokens on their behalf. If not, return an error.
+
+
+      // Extract data from the offer. 
+      const { collectionAddress, erc20Address, tokenId, bid } = offer
+
       // Transfer the NFT to the buyer.
-   } catch (error) {
+      const marketplaceContract = getContractInstanceWithSigner(ContractType.MARKETPLACE)
+      const tx = await marketplaceContract.finisAuction({ collectionAddress, erc20Address, tokenId, bid }, offer.bidderSig, body.ownerApprovedSig)
+      const receipt = await tx.wait()
+
+      res.status(200).send(receipt)
+
+   } catch (error: any) {
       res.status(500).send(error.message)
    }
 })
 
-app.listen(3000, () => {
-   console.log('Example app listening on port 3000!');
+app.listen(port, () => {
+   console.log(`Example app listening on port ${port}!`);
 }
 );

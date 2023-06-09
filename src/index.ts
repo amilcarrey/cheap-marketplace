@@ -151,8 +151,13 @@ app.post('/accept-offer', async (req, res) => {
       }
 
       // Check if the sellet is still the owner of the NFT. If not, return an error.
+      const isOwner = await ownNft(body.ownerAddress, listing.tokenId)
+      if (!isOwner) {
+         return res.status(400).send('You are not the owner of this NFT')
+      }
 
       // Check if the offer is still valid. If not, return an error and delete the listing. 
+
 
       // Check if the seller and the buyer have allowed the contract to transfer the NFT and the ERC20 tokens on their behalf. If not, return an error.
 

@@ -1,12 +1,12 @@
-import { z } from "zod";
+import { z } from 'zod'
 
 const acceptOfferInputSchema = z.object({
-   offerId: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+   offerId: z.string().uuid(),
    ownerAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
    ownerApprovedSig: z.string(),
-});
+})
 
-type AcceptOfferInput = z.infer<typeof acceptOfferInputSchema>;
+type AcceptOfferInput = z.infer<typeof acceptOfferInputSchema>
 
 const offerSchema = z.object({
    id: z.string().uuid(),
@@ -14,15 +14,15 @@ const offerSchema = z.object({
    collectionAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
    erc20Address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
    tokenId: z.number().min(1),
-   bid: z.number().min(1).nonnegative(),
+   bid: z.number().min(0).nonnegative(),
    bidderSig: z.string(),
-});
+})
 
-type Offer = z.infer<typeof offerSchema>;
+type Offer = z.infer<typeof offerSchema>
 
 enum ListingType {
    Bid = 'Bid',
-   FixedPrice = 'FixedPrice'
+   FixedPrice = 'FixedPrice',
 }
 
 const listingSchema = z.object({
@@ -31,9 +31,17 @@ const listingSchema = z.object({
    tokenId: z.number().min(1).nonnegative(),
    listingType: z.nativeEnum(ListingType),
    erc20Address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-   bidStartAtOrSellPrice: z.number().min(1).nonnegative(),
-});
+   bidStartAtOrSellPrice: z.number().min(0).nonnegative(),
+})
 
-type Listing = z.infer<typeof listingSchema>;
+type Listing = z.infer<typeof listingSchema>
 
-export { Offer, Listing, listingSchema, offerSchema, ListingType, AcceptOfferInput, acceptOfferInputSchema };
+export {
+   Offer,
+   Listing,
+   listingSchema,
+   offerSchema,
+   ListingType,
+   AcceptOfferInput,
+   acceptOfferInputSchema,
+}

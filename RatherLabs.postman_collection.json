@@ -1,0 +1,128 @@
+{
+	"info": {
+		"_postman_id": "cb41b9c5-67f1-44ab-98af-250db1ccdf95",
+		"name": "RatherLabs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "8587736"
+	},
+	"item": [
+		{
+			"name": "Listings",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/listings/",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"listings",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Sell",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"ownerAddress\": \"0xC9055374283898F6150c9b24e1c546d3EE6762D8\",\r\n    \"collectionAddress\": \"0xFCE9b92eC11680898c7FE57C4dDCea83AeabA3ff\",\r\n    \"tokenId\": 36,\r\n    \"listingType\": \"FixedPrice\",\r\n    \"erc20Address\": \"0xbd65c58D6F46d5c682Bf2f36306D461e3561C747\",\r\n    \"bidStartAtOrSellPrice\": \"1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/sell",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"sell"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "place-bid",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n   \"buyerAddress\": \"0x69622f1cCF8bDA7805EDcC6067E8F0Fa3BF9bE61\",\r\n   \"collectionAddress\": \"0xFCE9b92eC11680898c7FE57C4dDCea83AeabA3ff\",\r\n   \"erc20Address\": \"0x597C9bC3F00a4Df00F85E9334628f6cDf03A1184\",\r\n   \"tokenId\": 35,\r\n   \"bid\": 1,\r\n   \"bidderSig\": \"0x5d1938167da8f2dddca6295553f81f76528884758d9d0a5fda0e2e910717c71434bd07b5a75ed2a166fcf897ff2ec2361d632f52a62ec48f0cc2aeb6131b53501b\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/bid",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"bid"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "accept-offer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"offerId\":\"\",\r\n    \"ownerAddress\":\"0xC9055374283898F6150c9b24e1c546d3EE6762D8\",\r\n    \"ownerApprovedSig\":\"0xcbc9a17a14ba92e4f8cb5f5a576f8a27a4c46f320ec4561f5b830d0beaa1dd146c81185286f6f9b76abb0127ee9aedd79d4b26154dfcc27347ea2ada1b1d3dc21c\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/accept-offer",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"accept-offer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Offers",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/offers",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"offers"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

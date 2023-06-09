@@ -1,9 +1,9 @@
-import ethers from 'ethers';
+import { providers } from 'ethers';
 import { getContractInstance } from './contractUtilities';
 import { ContractType } from './contracts';
 
 //Sepholia provider
-const provider = new ethers.JsonRpcProvider('https://rpc.sophia.evonet.network');
+const provider = new providers.JsonRpcProvider('https://rpc.sepolia.org/', 11155111);
 
 const getBalance = async (address: string) => {
    const balance = await provider.getBalance(address);
@@ -12,14 +12,14 @@ const getBalance = async (address: string) => {
 
 const haveEnoughBalance = async (address: string, amount: number) => {
    const balance = await getBalance(address);
-   return balance >= amount;
+   return balance.toNumber() >= amount;
 }
 
-const ownNft = async (address: string, contract: string, tokenId: number) => {
-   const erc721Contract = getContractInstance(ContractType.ERC721);
+const ownNft = async (address: string, tokenId: number) => {
+   const erc721Contract = getContractInstance(ContractType.ERC721, provider);
    const owner = await erc721Contract.ownerOf(tokenId);
    return owner === address;
 }
 
 
-   export { haveEnoughBalance }
+export { haveEnoughBalance, ownNft }

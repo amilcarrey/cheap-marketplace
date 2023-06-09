@@ -2,8 +2,8 @@ import express from 'express';
 import { AcceptOfferInput, Listing, ListingType, Offer, acceptOfferInputSchema, listingSchema, offerSchema } from './types';
 import { haveEnoughBalance, ownNft } from './walletUtilities';
 import { v4 as uuidv4 } from 'uuid';
-import { getContractInstance, getContractInstanceWithSigner } from './contractUtilities';
-import { ContractType } from './contracts';
+import { getContractInstance, getContractInstanceWithSigner } from './utils/contractUtilities';
+import { ContractType } from './utils/contracts';
 import { BigNumber, utils } from 'ethers';
 
 const app = express();

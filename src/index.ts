@@ -1,6 +1,6 @@
 import express from 'express';
 import { AcceptOfferInput, Listing, ListingType, Offer, acceptOfferInputSchema, listingSchema, offerSchema } from './types';
-import { haveEnoughBalance, ownNft } from './walletUtilities';
+import { haveEnoughBalance, ownNft } from './utils/walletUtilities';
 import { v4 as uuidv4 } from 'uuid';
 import { getContractInstance, getContractInstanceWithSigner } from './utils/contractUtilities';
 import { ContractType } from './utils/contracts';
@@ -89,7 +89,7 @@ app.post('/sell', async (req, res) => {
 );
 
 // Maybe this endpoint should have a different name, like 'buy' or 'purchase', because 
-//but even if the listing is a fixed price, the seller still needs to accept the offer signing the offer. So, just to simplify things, I'll keep the name 'place-bid' and I'll be using for both cases 'purchase' and 'bid'.
+//even if the listing is a fixed price, the seller still needs to accept the offer signing the offer. So, just to simplify things, I'll keep the name 'place-bid' and I'll be using for both cases 'purchase' and 'bid'.
 app.post('/bid', async (req, res) => {
    try {
       const offer = req.body as Omit<Offer, 'id'>;

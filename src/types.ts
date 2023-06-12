@@ -36,6 +36,15 @@ const listingSchema = z.object({
 
 type Listing = z.infer<typeof listingSchema>
 
+const validationResultSchema = z.object({
+   statusCode: z.number(),
+   result: z.object({
+      success: z.boolean(),
+      error: z.string().optional(),
+   }),
+})
+type ValidationResult = z.infer<typeof validationResultSchema>
+
 export {
    Offer,
    Listing,
@@ -44,4 +53,5 @@ export {
    ListingType,
    AcceptOfferInput,
    acceptOfferInputSchema,
+   ValidationResult,
 }

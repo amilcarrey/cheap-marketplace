@@ -2,13 +2,10 @@ import express from 'express'
 import {
    AcceptOfferInput,
    Listing,
-   ListingType,
    Offer,
    acceptOfferInputSchema,
-   listingSchema,
-   offerSchema,
 } from './types'
-import { haveEnoughBalance, ownNft } from './utils/walletUtilities'
+import { ownNft } from './utils/walletUtilities'
 import { v4 as uuidv4 } from 'uuid'
 import {
    getContractInstance,
@@ -28,6 +25,8 @@ import {
    getOfferById,
    getOffers,
 } from './repositories/offersRepository'
+import { validateListing } from './services/listingService'
+import { validateOffer } from './services/offerService'
 
 const app = express()
 app.use(express.json())
@@ -47,7 +46,7 @@ app.get(['/listings', '/listings/:address'], async (req, res) => {
    }
 })
 
-app.get('/offers', (req, res) => {
+app.get('/offers', (_, res) => {
    try {
       const result = getOffers()
       return res.status(200).send(result)
@@ -62,39 +61,16 @@ app.get('/offers', (req, res) => {
 app.post('/sell', async (req, res) => {
    try {
       const listing = req.body as Listing
-      console.log(listing)
 
-      const correctSchema = listingSchema.safeParse(listing)
-      if (!correctSchema.success) {
-         res.status(400).send({
-            success: false,
-            error: 'Invalid listing input',
-         })
+      const isListingValid = await validateListing(listing)
+      if (!isListingValid.result.success) {
+         return res
+            .status(isListingValid.statusCode)
+            .send(isListingValid.result)
       }
-      const isOwner = await ownNft(listing.ownerAddress, listing.tokenId)
-      if (!isOwner) {
-         res.status(400).send({
-            success: false,
-            error: 'You do not own this NFT',
-         })
-      }
-
-      const existingListing = getListingByCollectionAddressAndTokenId(
-         listing.collectionAddress,
-         listing.tokenId
-      )
-
-      if (existingListing) {
-         return res.status(409).send({
-            success: false,
-            error: 'Listing already exists!',
-         })
-      }
-
       addListing(listing)
-
       return res.status(201).send('Listing created successfully!')
-   } catch (error: any) {
+   } catch (error) {
       if (error instanceof Error) {
          res.status(500).send(error.message)
       }
@@ -107,62 +83,12 @@ app.post('/sell', async (req, res) => {
 app.post('/bid', async (req, res) => {
    try {
       const offer = req.body as Omit<Offer, 'id'>
-
-      const isOfferSchemaValid = offerSchema.omit({ id: true }).safeParse(offer)
-
-      if (!isOfferSchemaValid.success) {
-         return res.status(400).send({
-            success: false,
-            error: 'Invalid offer input',
-         })
+      // Validate offer
+      const isOfferValid = await validateOffer(offer)
+      if (!isOfferValid.result.success) {
+         return res.status(isOfferValid.statusCode).send(isOfferValid.result)
       }
-
-      const listing = getListingByCollectionAddressAndTokenId(
-         offer.collectionAddress,
-         offer.tokenId
-      )
-
-      if (!listing) {
-         return res.status(404).send({
-            success: false,
-            error: 'This item is not for sale',
-         })
-      }
-
-      const _haveEnoughBalance = await haveEnoughBalance(
-         offer.buyerAddress,
-         offer.bid.toString()
-      )
-
-      if (!_haveEnoughBalance) {
-         return res.status(400).send({
-            success: false,
-            error: "You don't have enough founds!",
-         })
-      }
-
-      const bidOffer = utils.parseEther(offer.bid.toString())
-      const sellPrice = utils.parseEther(
-         listing.bidStartAtOrSellPrice.toString()
-      )
-      const isOfferEnough = bidOffer.gte(sellPrice)
-
-      if (!isOfferEnough) {
-         return res.status(400).send({
-            success: false,
-            error: 'Your offer is not enough',
-         })
-      }
-
-      const isOfferValid =
-         isOfferEnough && offer.erc20Address === listing.erc20Address
-      if (!isOfferValid && listing.listingType === ListingType.FixedPrice) {
-         return res.status(400).send({
-            success: false,
-            error: "Your're trying to buy an item with a different currency",
-         })
-      }
-
+      // Save new offer
       const newOffer = { id: uuidv4(), ...offer }
       addOffer(newOffer)
       return res.status(201).send({ success: true, offer: newOffer })

@@ -18,6 +18,7 @@ import { ContractType, contracts } from './utils/contracts'
 import { utils } from 'ethers'
 import { log } from 'console'
 import { getListings } from './repositories/lisntingsRepository'
+import { getOffers } from './repositories/offersRepository'
 
 const app = express()
 app.use(express.json())
@@ -71,11 +72,13 @@ app.get(['/listings', '/listings/:address'], async (req, res) => {
 
 app.get('/offers', (req, res) => {
    try {
-      return res.status(200).send(offers)
+      const result = getOffers()
+      return res.status(200).send(result)
    } catch (error) {
-      error instanceof Error ?
+      if (error instanceof Error) {
          res.status(500).send(error.message)
-         : res.status(500).send(error)
+      }
+      res.status(500).send(error)
    }
 })
 
@@ -86,11 +89,17 @@ app.post('/sell', async (req, res) => {
 
       const correctSchema = listingSchema.safeParse(listing)
       if (!correctSchema.success) {
-         res.status(400).send('Invalid listing input')
+         res.status(400).send({
+            success: false,
+            error: 'Invalid listing input',
+         })
       }
       const isOwner = await ownNft(listing.ownerAddress, listing.tokenId)
       if (!isOwner) {
-         res.status(400).send('You do not own this NFT')
+         res.status(400).send({
+            success: false,
+            error: 'You do not own this NFT',
+         })
       }
 
       const existingListing = listings.find(
@@ -100,16 +109,20 @@ app.post('/sell', async (req, res) => {
       )
 
       if (existingListing) {
-         return res.status(409).send('Listing already exists!')
+         return res.status(409).send({
+            success: false,
+            error: 'Listing already exists!',
+         })
       }
 
       listings.push(listing)
 
       return res.status(201).send('Listing created successfully!')
    } catch (error: any) {
-      error instanceof Error ?
+      if (error instanceof Error) {
          res.status(500).send(error.message)
-         : res.status(500).send(error)
+      }
+      res.status(500).send(error)
    }
 })
 
@@ -122,7 +135,10 @@ app.post('/bid', async (req, res) => {
       const isOfferSchemaValid = offerSchema.omit({ id: true }).safeParse(offer)
 
       if (!isOfferSchemaValid.success) {
-         return res.status(400).send('Invalid offer input')
+         return res.status(400).send({
+            success: false,
+            error: 'Invalid offer input',
+         })
       }
 
       const listing = listings.find(
@@ -132,7 +148,10 @@ app.post('/bid', async (req, res) => {
       )
 
       if (!listing) {
-         return res.status(404).send('This item is not for sale')
+         return res.status(404).send({
+            success: false,
+            error: 'This item is not for sale',
+         })
       }
 
       const _haveEnoughBalance = await haveEnoughBalance(
@@ -141,7 +160,10 @@ app.post('/bid', async (req, res) => {
       )
 
       if (!_haveEnoughBalance) {
-         return res.status(400).send("You don't have enough founds!")
+         return res.status(400).send({
+            success: false,
+            error: "You don't have enough founds!",
+         })
       }
 
       const bidOffer = utils.parseEther(offer.bid.toString())
@@ -151,27 +173,32 @@ app.post('/bid', async (req, res) => {
       const isOfferEnough = bidOffer.gte(sellPrice)
 
       if (!isOfferEnough) {
-         return res.status(400).send('Your offer is not enough')
+         return res.status(400).send({
+            success: false,
+            error: 'Your offer is not enough',
+         })
       }
 
       const isOfferValid =
          isOfferEnough && offer.erc20Address === listing.erc20Address
       if (!isOfferValid && listing.listingType === ListingType.FixedPrice) {
-         return res
-            .status(400)
-            .send("Your're trying to buy an item with a different currency")
+         return res.status(400).send({
+            success: false,
+            error: "Your're trying to buy an item with a different currency",
+         })
       }
 
       const newOffer = { id: uuidv4(), ...offer }
       offers.push(newOffer)
       return res.status(201).send({ success: true, offer: newOffer })
    } catch (error) {
-      error instanceof Error ?
+      if (error instanceof Error) {
          res.status(500).send(error.message)
-         : res.status(500).send(error)
+      }
+      res.status(500).send(error)
    }
 })
-//1000000000000000000
+
 app.post('/accept-offer', async (req, res) => {
    try {
       // Obtain the offer from the request body

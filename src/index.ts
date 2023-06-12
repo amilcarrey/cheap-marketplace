@@ -1,32 +1,10 @@
 import express from 'express'
-import {
-   AcceptOfferInput,
-   Listing,
-   Offer,
-   acceptOfferInputSchema,
-} from './types'
-import { ownNft } from './utils/walletUtilities'
-import { v4 as uuidv4 } from 'uuid'
-import {
-   getContractInstance,
-   getContractInstanceWithSigner,
-} from './utils/contractUtilities'
-import { ContractType, contracts } from './utils/contracts'
-import { utils } from 'ethers'
-import {
-   addListing,
-   deleteListing,
-   getListingByCollectionAddressAndTokenId,
-   getListings,
-} from './repositories/lisntingsRepository'
-import {
-   addOffer,
-   deleteOfferById,
-   getOfferById,
-   getOffers,
-} from './repositories/offersRepository'
+import { AcceptOfferInput, Listing, Offer } from './types'
+import { addListing, getListings } from './repositories/lisntingsRepository'
+import { addOffer, getOffers } from './repositories/offersRepository'
 import { validateListing } from './services/listingService'
 import { validateOffer } from './services/offerService'
+import { acceptOffer, validateApproval } from './services/purchaseService'
 
 const app = express()
 app.use(express.json())
@@ -89,8 +67,7 @@ app.post('/bid', async (req, res) => {
          return res.status(isOfferValid.statusCode).send(isOfferValid.result)
       }
       // Save new offer
-      const newOffer = { id: uuidv4(), ...offer }
-      addOffer(newOffer)
+      const newOffer = addOffer(offer)
       return res.status(201).send({ success: true, offer: newOffer })
    } catch (error) {
       if (error instanceof Error) {
@@ -104,97 +81,13 @@ app.post('/accept-offer', async (req, res) => {
    try {
       // Obtain the offer from the request body
       const body = req.body as AcceptOfferInput
-      const validResult = acceptOfferInputSchema.safeParse(body)
-      if (!validResult.success) {
-         return res
-            .status(400)
-            .send({ success: false, error: validResult.error })
+
+      const result = await validateApproval(body)
+      if (!result.result.success) {
+         return res.status(result.statusCode).send(result.result)
       }
 
-      // Check if the offer exists. If not, return an error.
-      const offer = getOfferById(body.offerId)
-      if (!offer) {
-         return res
-            .status(404)
-            .send({ success: false, error: 'Offer not found' })
-      }
-
-      // Check if the listing exists. If not, return an error.
-      const listing = getListingByCollectionAddressAndTokenId(
-         offer.collectionAddress,
-         offer.tokenId
-      )
-      if (!listing) {
-         return res
-            .status(404)
-            .send({ success: false, error: 'Listing not found' })
-      }
-
-      // Check if the sellet is still the owner of the NFT. If not, return an error.
-      const isOwner = await ownNft(body.ownerAddress, listing.tokenId)
-      if (!isOwner) {
-         return res.status(400).send({
-            success: false,
-            error: 'You are not the owner of this NFT',
-         })
-      }
-
-      // Check if the nft is approved to be transfer by the marketplace contract.
-      const nftContract = getContractInstance(ContractType.ERC721)
-      const approvedAddress = await nftContract.getApproved(offer.tokenId)
-      const isApproved =
-         contracts[ContractType.MARKETPLACE].address === approvedAddress
-
-      if (!isApproved) {
-         return res.status(400).send({
-            success: false,
-            error: 'The NFT is not approved to be transfer by the marketplace contract',
-         })
-      }
-
-      //Check if the erc20 is approved to be transfer by the marketplace contract.
-      const erc20Contract = getContractInstance(ContractType.ERC20)
-      const allowance = await erc20Contract.allowance(
-         offer.buyerAddress,
-         contracts[ContractType.MARKETPLACE].address
-      )
-      const isAllowToSpend = allowance.gte(
-         utils.parseEther(offer.bid.toString())
-      )
-
-      if (!isAllowToSpend) {
-         return res.status(400).send({
-            success: false,
-            error: 'The ERC20 is not approved to be transfer by the marketplace contract',
-         })
-      }
-
-      // Extract data from the offer.
-      const { collectionAddress, erc20Address, tokenId, bid } = offer
-
-      // Transfer the NFT to the buyer.
-      const marketplaceContract = getContractInstanceWithSigner(
-         ContractType.MARKETPLACE
-      )
-      const bidAmmount = utils.parseEther(bid.toString())
-      const autionData = {
-         collectionAddress,
-         erc20Address,
-         tokenId,
-         bid: bidAmmount,
-      }
-      const tx = await marketplaceContract.finishAuction(
-         autionData,
-         offer.bidderSig,
-         body.ownerApprovedSig
-      )
-      const receipt = await tx.wait()
-
-      // Delete the listing.
-      deleteListing(listing)
-
-      // Delete the offer.
-      deleteOfferById(body.offerId)
+      const receipt = await acceptOffer(body)
 
       res.status(200).send({
          success: true,

@@ -1,4 +1,5 @@
 import { Offer } from '../types'
+import { v4 as uuidv4 } from 'uuid'
 
 const offers: Offer[] = [
    {
@@ -30,8 +31,11 @@ const getOfferById = (id: string): Offer | undefined => {
    return offers.find((o) => o.id === id)
 }
 
-const addOffer = (offer: Offer) => {
-   offers.push(offer)
+const addOffer = (offer: Omit<Offer, 'id'>) => {
+   const newId = uuidv4()
+   const newOffer = { id: newId, ...offer }
+   offers.push(newOffer)
+   return newOffer
 }
 
 const deleteOfferById = (id: string) => {

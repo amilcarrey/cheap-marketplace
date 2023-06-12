@@ -59,7 +59,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n   \"buyerAddress\": \"0x69622f1cCF8bDA7805EDcC6067E8F0Fa3BF9bE61\",\r\n   \"collectionAddress\": \"0xFCE9b92eC11680898c7FE57C4dDCea83AeabA3ff\",\r\n   \"erc20Address\": \"0x597C9bC3F00a4Df00F85E9334628f6cDf03A1184\",\r\n   \"tokenId\": 35,\r\n   \"bid\": 0.01,\r\n   \"bidderSig\": \"0xbc8a24a46da66820353950dbd5b38c7e4727da820ffae5166d8aa4ce1f3d52bf6e580fe20d4e80a583fc11329c018974dedcf14bc4c5f0e5e4770f061dfcad471b\"\r\n}",
+					"raw": "{\r\n   \"buyerAddress\": \"0x69622f1cCF8bDA7805EDcC6067E8F0Fa3BF9bE61\",\r\n   \"collectionAddress\": \"0xFCE9b92eC11680898c7FE57C4dDCea83AeabA3ff\",\r\n   \"erc20Address\": \"0x597C9bC3F00a4Df00F85E9334628f6cDf03A1184\",\r\n   \"tokenId\": 36,\r\n   \"bid\": 0.01,\r\n   \"bidderSig\": \"0xbc8a24a46da66820353950dbd5b38c7e4727da820ffae5166d8aa4ce1f3d52bf6e580fe20d4e80a583fc11329c018974dedcf14bc4c5f0e5e4770f061dfcad471b\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -86,7 +86,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"offerId\":\"dbb3161a-e6d3-4a55-a898-12784dd4137c\",\r\n    \"ownerAddress\":\"0xC9055374283898F6150c9b24e1c546d3EE6762D8\",\r\n    \"ownerApprovedSig\":\"0x23e91a1e27b645f07e5dc172afebf3932b8ec7edc331c46937a5536e41bbb9a967a78b456747551d242d4855977208e506b1a7b081f3ca9dd06f44e7a8f498d81b\"\r\n}",
+					"raw": "{\r\n    \"offerId\":\"dbb3161a-e6d3-4a55-a898-12784dd4137c\",\r\n    \"ownerAddress\":\"0xC9055374283898F6150c9b24e1c546d3EE6762D8\",\r\n    \"ownerApprovedSig\":\"0x4fb032d65bd4db02d83dccb2837c19fc9f4c7a5a8d469072cbe9566cc1e9d18e35b85b5794c4f15ec2e8c26b59699f76182d7a1c166d0b867a731d57b3dc6dd61c\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"

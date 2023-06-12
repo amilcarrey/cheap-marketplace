@@ -17,6 +17,7 @@ import {
 import { ContractType, contracts } from './utils/contracts'
 import { utils } from 'ethers'
 import { log } from 'console'
+import { getListings } from './repositories/lisntingsRepository'
 
 const app = express()
 app.use(express.json())
@@ -51,24 +52,20 @@ const offers: Offer[] = [
       tokenId: 35,
       bid: 0.01,
       bidderSig:
-         '0xc7f5d0c963dc9cff70a9d31b9b20ead5b89d215ed412a34a014cb68ae37ce3a557494ef496e68f47c68672abb60931a4de3c77a0a0767cb020d4a7b2c4af56961b',
+         '0x23192d0faaada95ee4d5aedb6da33fb70fac1b9f05fb39874613658fd9b4b2b342889a1c2947463d3ed028bd4e4d7bec50cae26b7868a63d8a766964bde576a81b',
    },
 ]
 
-app.get(['/listings', '/listings/:address'], (req, res) => {
+app.get(['/listings', '/listings/:address'], async (req, res) => {
    try {
       const address = req.params.address
-      if (!address) {
-         return res.status(200).send(listings)
-      }
-
-      const filteredListings = listings.filter(
-         (listing) => listing.ownerAddress === address
-      )
-
-      return res.status(200).send(filteredListings)
+      const result = getListings(address)
+      return res.status(200).send(result)
    } catch (error) {
-      return res.status(500).send(error)
+      if (error instanceof Error) {
+         res.status(500).send(error.message)
+      }
+      res.status(500).send(error)
    }
 })
 
@@ -76,7 +73,9 @@ app.get('/offers', (req, res) => {
    try {
       return res.status(200).send(offers)
    } catch (error) {
-      return res.status(500).send(error)
+      error instanceof Error ?
+         res.status(500).send(error.message)
+         : res.status(500).send(error)
    }
 })
 
@@ -108,7 +107,9 @@ app.post('/sell', async (req, res) => {
 
       return res.status(201).send('Listing created successfully!')
    } catch (error: any) {
-      return res.status(500).send(error.message as Error)
+      error instanceof Error ?
+         res.status(500).send(error.message)
+         : res.status(500).send(error)
    }
 })
 
@@ -165,7 +166,9 @@ app.post('/bid', async (req, res) => {
       offers.push(newOffer)
       return res.status(201).send({ success: true, offer: newOffer })
    } catch (error) {
-      res.status(500).send(error.message)
+      error instanceof Error ?
+         res.status(500).send(error.message)
+         : res.status(500).send(error)
    }
 })
 //1000000000000000000
@@ -277,7 +280,9 @@ app.post('/accept-offer', async (req, res) => {
          transactionHash: receipt.transactionHash,
       })
    } catch (error) {
-      res.status(500).send(error.message)
+      error instanceof Error ?
+         res.status(500).send(error.message)
+         : res.status(500).send(error)
    }
 })
 

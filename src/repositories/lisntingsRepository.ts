@@ -18,3 +18,17 @@ const listings: Listing[] = [
       bidStartAtOrSellPrice: 0.01,
    },
 ]
+
+const addListing = (listing: Listing) => {
+   listings.push(listing)
+}
+
+const getListings = (address?: string) => {
+   if (!address) {
+      return listings
+   }
+
+   return listings.filter((listing) => listing.ownerAddress === address)
+}
+
+export { addListing, getListings }

@@ -8,7 +8,7 @@ dotenv.config({ path: __dirname + '/.env' })
 const bid = {
    collectionAddress: '0xFCE9b92eC11680898c7FE57C4dDCea83AeabA3ff',
    erc20Address: '0xbd65c58D6F46d5c682Bf2f36306D461e3561C747',
-   tokenId: 35,
+   tokenId: 36,
    bid: 0.01,
 }
 

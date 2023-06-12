@@ -51,7 +51,7 @@ const offers: Offer[] = [
       tokenId: 35,
       bid: 0.01,
       bidderSig:
-         '0x96c8a2f4dff468a09d7a28857a7344f92a909224f8ab93e8d4a807880bc427437ec624c05771bb042a40631196030f102d5f31f164f410a7b595042e08fab3981b',
+         '0xc7f5d0c963dc9cff70a9d31b9b20ead5b89d215ed412a34a014cb68ae37ce3a557494ef496e68f47c68672abb60931a4de3c77a0a0767cb020d4a7b2c4af56961b',
    },
 ]
 
@@ -164,7 +164,7 @@ app.post('/bid', async (req, res) => {
       const newOffer = { id: uuidv4(), ...offer }
       offers.push(newOffer)
       return res.status(201).send({ success: true, offer: newOffer })
-   } catch (error: any) {
+   } catch (error) {
       res.status(500).send(error.message)
    }
 })
@@ -209,14 +209,11 @@ app.post('/accept-offer', async (req, res) => {
          })
       }
 
-      // Check if the offer is still valid. If not, return an error and delete the listing.
-
-      // Check if the seller and the buyer have allowed the contract to transfer the NFT and the ERC20 tokens on their behalf. If not, return an error.
-
       // Check if the nft is approved to be transfer by the marketplace contract.
       const nftContract = getContractInstance(ContractType.ERC721)
       const approvedAddress = await nftContract.getApproved(offer.tokenId)
-      const isApproved = contracts[ContractType.MARKETPLACE].address === approvedAddress
+      const isApproved =
+         contracts[ContractType.MARKETPLACE].address === approvedAddress
 
       if (!isApproved) {
          return res.status(400).send({
@@ -228,8 +225,12 @@ app.post('/accept-offer', async (req, res) => {
       //Check if the erc20 is approved to be transfer by the marketplace contract.
       const erc20Contract = getContractInstance(ContractType.ERC20)
       const allowance = await erc20Contract.allowance(
-         offer.buyerAddress, contracts[ContractType.MARKETPLACE].address)
-      const isAllowToSpend = allowance.gte(utils.parseEther(offer.bid.toString()))
+         offer.buyerAddress,
+         contracts[ContractType.MARKETPLACE].address
+      )
+      const isAllowToSpend = allowance.gte(
+         utils.parseEther(offer.bid.toString())
+      )
 
       if (!isAllowToSpend) {
          return res.status(400).send({
@@ -237,7 +238,6 @@ app.post('/accept-offer', async (req, res) => {
             error: 'The ERC20 is not approved to be transfer by the marketplace contract',
          })
       }
-
 
       // Extract data from the offer.
       const { collectionAddress, erc20Address, tokenId, bid } = offer
@@ -251,7 +251,7 @@ app.post('/accept-offer', async (req, res) => {
          collectionAddress,
          erc20Address,
          tokenId,
-         bid: bidAmmount
+         bid: bidAmmount,
       }
       log(autionData)
       const tx = await marketplaceContract.finishAuction(
@@ -261,8 +261,22 @@ app.post('/accept-offer', async (req, res) => {
       )
       const receipt = await tx.wait()
 
-      res.status(200).send(receipt)
-   } catch (error: any) {
+      // Delete the listing.
+      const listingIndex = listings.findIndex(
+         (l) =>
+            l.collectionAddress === collectionAddress && l.tokenId === tokenId
+      )
+      listings.splice(listingIndex, 1)
+
+      // Delete the offer.
+      const offerIndex = offers.findIndex((o) => o.id === body.offerId)
+      offers.splice(offerIndex, 1)
+
+      res.status(200).send({
+         success: true,
+         transactionHash: receipt.transactionHash,
+      })
+   } catch (error) {
       res.status(500).send(error.message)
    }
 })

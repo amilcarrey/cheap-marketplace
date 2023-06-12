@@ -16,46 +16,23 @@ import {
 } from './utils/contractUtilities'
 import { ContractType, contracts } from './utils/contracts'
 import { utils } from 'ethers'
-import { log } from 'console'
-import { getListings } from './repositories/lisntingsRepository'
-import { getOffers } from './repositories/offersRepository'
+import {
+   addListing,
+   deleteListing,
+   getListingByCollectionAddressAndTokenId,
+   getListings,
+} from './repositories/lisntingsRepository'
+import {
+   addOffer,
+   deleteOfferById,
+   getOfferById,
+   getOffers,
+} from './repositories/offersRepository'
 
 const app = express()
 app.use(express.json())
 
 const port = 3000
-
-const listings: Listing[] = [
-   {
-      ownerAddress: '0xC9055374283898F6150c9b24e1c546d3EE6762D8',
-      collectionAddress: '0xFCE9b92eC11680898c7FE57C4dDCea83AeabA3ff',
-      tokenId: 34,
-      listingType: ListingType.FixedPrice,
-      erc20Address: '0xbd65c58D6F46d5c682Bf2f36306D461e3561C747',
-      bidStartAtOrSellPrice: 0.01,
-   },
-   {
-      ownerAddress: '0xC9055374283898F6150c9b24e1c546d3EE6762D8',
-      collectionAddress: '0xFCE9b92eC11680898c7FE57C4dDCea83AeabA3ff',
-      tokenId: 35,
-      listingType: ListingType.Bid,
-      erc20Address: '0xbd65c58D6F46d5c682Bf2f36306D461e3561C747',
-      bidStartAtOrSellPrice: 0.01,
-   },
-]
-
-const offers: Offer[] = [
-   {
-      id: 'dbb3161a-e6d3-4a55-a898-12784dd4137c',
-      buyerAddress: '0x69622f1cCF8bDA7805EDcC6067E8F0Fa3BF9bE61',
-      collectionAddress: '0xFCE9b92eC11680898c7FE57C4dDCea83AeabA3ff',
-      erc20Address: '0xbd65c58D6F46d5c682Bf2f36306D461e3561C747',
-      tokenId: 35,
-      bid: 0.01,
-      bidderSig:
-         '0x23192d0faaada95ee4d5aedb6da33fb70fac1b9f05fb39874613658fd9b4b2b342889a1c2947463d3ed028bd4e4d7bec50cae26b7868a63d8a766964bde576a81b',
-   },
-]
 
 app.get(['/listings', '/listings/:address'], async (req, res) => {
    try {
@@ -102,10 +79,9 @@ app.post('/sell', async (req, res) => {
          })
       }
 
-      const existingListing = listings.find(
-         (l) =>
-            l.collectionAddress === listing.collectionAddress &&
-            l.tokenId === listing.tokenId
+      const existingListing = getListingByCollectionAddressAndTokenId(
+         listing.collectionAddress,
+         listing.tokenId
       )
 
       if (existingListing) {
@@ -115,7 +91,7 @@ app.post('/sell', async (req, res) => {
          })
       }
 
-      listings.push(listing)
+      addListing(listing)
 
       return res.status(201).send('Listing created successfully!')
    } catch (error: any) {
@@ -141,10 +117,9 @@ app.post('/bid', async (req, res) => {
          })
       }
 
-      const listing = listings.find(
-         (l) =>
-            l.collectionAddress === offer.collectionAddress &&
-            l.tokenId === offer.tokenId
+      const listing = getListingByCollectionAddressAndTokenId(
+         offer.collectionAddress,
+         offer.tokenId
       )
 
       if (!listing) {
@@ -189,7 +164,7 @@ app.post('/bid', async (req, res) => {
       }
 
       const newOffer = { id: uuidv4(), ...offer }
-      offers.push(newOffer)
+      addOffer(newOffer)
       return res.status(201).send({ success: true, offer: newOffer })
    } catch (error) {
       if (error instanceof Error) {
@@ -211,7 +186,7 @@ app.post('/accept-offer', async (req, res) => {
       }
 
       // Check if the offer exists. If not, return an error.
-      const offer = offers.find((o) => o.id === body.offerId)
+      const offer = getOfferById(body.offerId)
       if (!offer) {
          return res
             .status(404)
@@ -219,10 +194,9 @@ app.post('/accept-offer', async (req, res) => {
       }
 
       // Check if the listing exists. If not, return an error.
-      const listing = listings.find(
-         (l) =>
-            l.collectionAddress === offer.collectionAddress &&
-            l.tokenId === offer.tokenId
+      const listing = getListingByCollectionAddressAndTokenId(
+         offer.collectionAddress,
+         offer.tokenId
       )
       if (!listing) {
          return res
@@ -283,7 +257,6 @@ app.post('/accept-offer', async (req, res) => {
          tokenId,
          bid: bidAmmount,
       }
-      log(autionData)
       const tx = await marketplaceContract.finishAuction(
          autionData,
          offer.bidderSig,
@@ -292,23 +265,18 @@ app.post('/accept-offer', async (req, res) => {
       const receipt = await tx.wait()
 
       // Delete the listing.
-      const listingIndex = listings.findIndex(
-         (l) =>
-            l.collectionAddress === collectionAddress && l.tokenId === tokenId
-      )
-      listings.splice(listingIndex, 1)
+      deleteListing(listing)
 
       // Delete the offer.
-      const offerIndex = offers.findIndex((o) => o.id === body.offerId)
-      offers.splice(offerIndex, 1)
+      deleteOfferById(body.offerId)
 
       res.status(200).send({
          success: true,
          transactionHash: receipt.transactionHash,
       })
    } catch (error) {
-      error instanceof Error ?
-         res.status(500).send(error.message)
+      error instanceof Error
+         ? res.status(500).send(error.message)
          : res.status(500).send(error)
    }
 })

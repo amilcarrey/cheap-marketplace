@@ -6,13 +6,43 @@ const offers: Offer[] = [
       buyerAddress: '0x69622f1cCF8bDA7805EDcC6067E8F0Fa3BF9bE61',
       collectionAddress: '0xFCE9b92eC11680898c7FE57C4dDCea83AeabA3ff',
       erc20Address: '0xbd65c58D6F46d5c682Bf2f36306D461e3561C747',
-      tokenId: 35,
+      tokenId: 38,
       bid: 0.01,
       bidderSig:
-         '0x23192d0faaada95ee4d5aedb6da33fb70fac1b9f05fb39874613658fd9b4b2b342889a1c2947463d3ed028bd4e4d7bec50cae26b7868a63d8a766964bde576a81b',
+         '0xbc604f8851c848dc87113d92f95235be89701106e00c2b8544932293ecbaa4022529a5a2af92d9cac405a0cf3f06120fcc7250050a1488f83d14b7d82ffa77591c',
    },
 ]
 
-export const getOffers = (): Offer[] => {
+const getOffers = (): Offer[] => {
    return offers
+}
+
+const getOfferByCollectionAddressAndTokenId = (
+   collectionAddress: string,
+   tokenId: number
+): Offer | undefined => {
+   return offers.find(
+      (o) => o.collectionAddress === collectionAddress && o.tokenId === tokenId
+   )
+}
+
+const getOfferById = (id: string): Offer | undefined => {
+   return offers.find((o) => o.id === id)
+}
+
+const addOffer = (offer: Offer) => {
+   offers.push(offer)
+}
+
+const deleteOfferById = (id: string) => {
+   const index = offers.findIndex((o) => o.id === id)
+   offers.splice(index, 1)
+}
+
+export {
+   getOffers,
+   getOfferByCollectionAddressAndTokenId,
+   addOffer,
+   getOfferById,
+   deleteOfferById,
 }

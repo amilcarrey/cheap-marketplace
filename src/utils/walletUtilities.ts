@@ -1,4 +1,4 @@
-import { BigNumber, providers, utils } from 'ethers'
+import { providers, utils } from 'ethers'
 import { getContractInstance } from './contractUtilities'
 import { ContractType } from './contracts'
 

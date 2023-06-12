@@ -1,7 +1,8 @@
 import { Contract, Wallet, providers } from 'ethers'
 import { ContractType, contracts } from './contracts'
 import * as dotenv from 'dotenv'
-dotenv.config({ path: `${__dirname.split('\\').slice(0, -1).join('\\')}/.env` })
+// configure dotenv to root directory
+dotenv.config({ path: __dirname + '/../.env' })
 
 const provider = new providers.JsonRpcProvider(
    'https://rpc.sepolia.org/',
